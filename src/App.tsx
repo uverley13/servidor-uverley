@@ -8,8 +8,8 @@ import {
   MessageCircleMore,
   MonitorSmartphone,
   PackageCheck,
-  ShieldCheck,
   Settings2,
+  ShieldCheck,
   Smartphone,
   Users,
   Wallet,
@@ -289,7 +289,20 @@ export function ServicesSection({ services, loading, error }: { services: Servic
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {services.map((service) => {
-            const Icon = iconMap[service.name.includes('WhatsApp') ? 'MessageCircleMore' : service.name.includes('Móvil') ? 'Smartphone' : service.name.includes('Pedidos') ? 'PackageCheck' : service.name.includes('Asistencia') ? 'Headset' : service.name.includes('Configuración') ? 'Settings2' : 'MonitorSmartphone'];
+            const Icon =
+              iconMap[
+                service.name.includes('WhatsApp')
+                  ? 'MessageCircleMore'
+                  : service.name.includes('Móvil')
+                    ? 'Smartphone'
+                    : service.name.includes('Pedidos')
+                      ? 'PackageCheck'
+                      : service.name.includes('Asistencia')
+                        ? 'Headset'
+                        : service.name.includes('Configuración')
+                          ? 'Settings2'
+                          : 'MonitorSmartphone'
+              ] ?? MonitorSmartphone;
 
             return (
               <article key={service.id} className="group rounded-[1.75rem] border border-white/10 bg-slate-900/70 p-5 transition duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_24px_60px_rgba(109,40,217,0.22)]">
@@ -612,7 +625,19 @@ export function Footer() {
   );
 }
 
-export function LoginPanel({ onSubmit, onCancel, error }: { onSubmit: (email: string, password: string) => void; onCancel: () => void; error: string | null }) {
+export function LoginPanel({
+  onSubmit,
+  onRegister,
+  onCancel,
+  error,
+}: {
+  onSubmit: (email: string, password: string) => void;
+  onRegister: (name: string, email: string, password: string) => void;
+  onCancel: () => void;
+  error: string | null;
+}) {
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('cliente@servidoruverley.com');
   const [password, setPassword] = useState('cliente123');
 
@@ -620,10 +645,35 @@ export function LoginPanel({ onSubmit, onCancel, error }: { onSubmit: (email: st
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-violet-900/20">
         <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-bold text-white">Iniciar sesión</h3>
+          <h3 className="text-2xl font-bold text-white">{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</h3>
           <button type="button" onClick={onCancel} className="rounded-full border border-white/10 bg-white/5 p-2 text-slate-200"><X className="h-4 w-4" /></button>
         </div>
-        <div className="mt-5 space-y-4">
+
+        <div className="mt-5 mb-4 flex rounded-full border border-white/10 bg-slate-950/60 p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => setMode('login')}
+            className={`flex-1 rounded-full px-3 py-2 ${mode === 'login' ? 'bg-violet-500 text-white' : 'text-slate-300'}`}
+          >
+            Entrar
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('register')}
+            className={`flex-1 rounded-full px-3 py-2 ${mode === 'register' ? 'bg-violet-500 text-white' : 'text-slate-300'}`}
+          >
+            Registrarse
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {mode === 'register' ? (
+            <div>
+              <label className="mb-2 block text-sm text-slate-300">Nombre</label>
+              <input value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:border-violet-400 focus:outline-none" />
+            </div>
+          ) : null}
+
           <div>
             <label className="mb-2 block text-sm text-slate-300">Correo</label>
             <input value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:border-violet-400 focus:outline-none" />
@@ -634,8 +684,18 @@ export function LoginPanel({ onSubmit, onCancel, error }: { onSubmit: (email: st
           </div>
           {error ? <p className="text-sm text-rose-300">{error}</p> : null}
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => onSubmit(email, password)} className="flex-1 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 font-semibold text-white">
-              Entrar
+            <button
+              type="button"
+              onClick={() => {
+                if (mode === 'login') {
+                  onSubmit(email, password);
+                } else {
+                  onRegister(name, email, password);
+                }
+              }}
+              className="flex-1 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 font-semibold text-white"
+            >
+              {mode === 'login' ? 'Entrar' : 'Crear cuenta'}
             </button>
             <button type="button" onClick={onCancel} className="flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white">
               Cancelar
