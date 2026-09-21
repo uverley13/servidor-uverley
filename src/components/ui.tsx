@@ -1,213 +1,32 @@
-import { useEffect, useState } from 'react';
-import {
-  AdminPage,
-  BenefitsSection,
-  ContactSection,
-  FaqSection,
-  Footer,
-  Header,
-  Hero,
-  LoginPanel,
-  PricingSection,
-  ProcessSection,
-  ProfilePage,
-  RouteNotFound,
-  ServicesSection,
-} from './components/ui';
-import { defaultUsers, services as initialServices } from './lib/mock-data';
-import {
-  fetchServicesFromSupabase,
-  getCurrentAppUser,
-  hasSupabaseConfig,
-  signInWithEmail,
-  signOutFromSupabase,
-  signUpWithEmail,
-} from './lib/supabase';
-import { readStoredSession, readStoredUsers, saveStoredSession, saveStoredUsers } from './lib/storage';
-import type { Service, User } from './types';
+import { useState, type FormEvent } from 'react';
+import { ArrowRight, BadgeDollarSign, ChevronDown, Headset, Menu, MessageCircleMore, MonitorSmartphone, PackageCheck, Settings2, ShieldCheck, Smartphone, Users, X, Zap } from 'lucide-react';
+import { navItems } from '../lib/mock-data';
+import { validateContact } from '../lib/storage';
+import type { ContactFormValues, Service, User } from '../types';
 
-function App() {
-  const [user, setUser] = useState<User | null>(() => readStoredSession());
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
-  const [route, setRoute] = useState<string>(() => (typeof window !== 'undefined' ? window.location.pathname : '/'));
+type HeaderProps = { user: User | null; onLogin: () => void; onLogout: () => void; onNavigate: (path: string) => void };
+const whatsapp = 'https://wa.me/573172329884';
 
-  useEffect(() => {
-    const existing = readStoredUsers();
-    if (!existing.length) saveStoredUsers(defaultUsers);
+export function Header({ user, onLogin, onLogout, onNavigate }: HeaderProps) { const [open, setOpen] = useState(false); return <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl"><div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8"><button type="button" onClick={() => onNavigate('/')} className="flex items-center gap-3 font-semibold"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500">S</span>Servidor Uverley</button><nav className="hidden gap-6 md:flex">{navItems.map((item) => <a key={item.label} href={item.href} className="text-sm text-slate-300 hover:text-white">{item.label}</a>)}</nav><div className="hidden items-center gap-3 md:flex">{user ? <><button type="button" onClick={() => onNavigate('/perfil')} className="text-sm text-slate-200">Perfil</button><button type="button" onClick={onLogout} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm">Cerrar sesión</button></> : <button type="button" onClick={onLogin} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm">Iniciar sesión</button>}<a href={whatsapp} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600"><MessageCircleMore className="h-5 w-5" /></a></div><button type="button" onClick={() => setOpen(!open)} className="rounded-full border border-white/10 p-3 md:hidden" aria-label="Abrir menú">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button></div>{open ? <div className="border-t border-white/10 p-4 md:hidden">{navItems.map((item) => <a key={item.label} href={item.href} onClick={() => setOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-slate-200">{item.label}</a>)}<button type="button" onClick={() => { onLogin(); setOpen(false); }} className="mt-3 w-full rounded-full border border-white/10 px-4 py-2">{user ? 'Perfil' : 'Iniciar sesión'}</button></div> : null}</header>; }
 
-    const loadInitialData = async () => {
-      try {
-        if (hasSupabaseConfig) {
-          const sessionUser = await getCurrentAppUser();
-          if (sessionUser) {
-            setUser(sessionUser);
-          } else {
-            const saved = readStoredSession();
-            if (saved) setUser(saved);
-          }
+export function Hero() { return <section id="inicio" className="section-shell px-4 pb-16 pt-12 sm:px-6 lg:px-8"><div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.1fr_.9fr]"><div><span className="inline-flex rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-[10px] uppercase tracking-[.2em] text-violet-200">Soluciones digitales</span><h1 className="mt-5 max-w-xl text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-6xl">Tecnología, servicios y soluciones para ti</h1><p className="mt-5 max-w-xl text-slate-300 md:text-lg">Servicios profesionales, atención rápida, precios competitivos y soporte personalizado.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><a href="#servicios" className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 px-6 py-3 font-semibold">Explorar servicios <ArrowRight className="h-4 w-4" /></a><a href={whatsapp} target="_blank" rel="noreferrer" className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-center font-semibold">Contactar por WhatsApp</a></div></div><div className="soft-card floaty rounded-[2rem] p-5"><div className="rounded-3xl border border-white/10 bg-slate-950/80 p-5"><div className="flex justify-between text-xs uppercase tracking-widest text-slate-400"><span>Dashboard</span><span className="text-emerald-300">● Online</span></div>{[['Servicios activos','24'],['Pedidos gestionados','1.2k'],['Satisfacción','96%']].map(([a,b]) => <div key={a} className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4"><p className="text-xs text-slate-400">{a}</p><p className="mt-2 text-3xl font-bold">{b}</p></div>)}</div></div></div></section>; }
 
-          const supabaseServices = await fetchServicesFromSupabase();
-          if (supabaseServices.length > 0) {
-            setServices(supabaseServices);
-          } else {
-            setServices(initialServices as Service[]);
-          }
-        } else {
-          const saved = readStoredSession();
-          if (saved) setUser(saved);
-          setServices(initialServices as Service[]);
-        }
-      } catch (loadError) {
-        console.error(loadError);
-        setServices(initialServices as Service[]);
-        setError('No se pudo cargar la información. Usando datos locales.');
-      } finally {
-        setLoading(false);
-      }
-    };
+export function ServicesSection({ services, loading, error }: { services: Service[]; loading: boolean; error: string | null }) { if (loading) return <section id="servicios" className="px-4 py-16 text-center text-slate-300">Cargando servicios...</section>; if (error) return <section id="servicios" className="px-4 py-16"><div className="mx-auto max-w-7xl rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 text-rose-100">{error}</div></section>; return <section id="servicios" className="section-shell px-4 py-16 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><div className="mb-10 text-center"><span className="text-xs uppercase tracking-widest text-violet-200">Servicios</span><h2 className="mt-3 text-3xl font-bold">Soluciones pensadas para crecer</h2></div>{services.length ? <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{services.map((service) => <article key={service.id} className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 transition hover:-translate-y-1 hover:border-violet-400/50"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-200"><MonitorSmartphone className="h-5 w-5" /></div><h3 className="mt-5 text-xl font-semibold">{service.name}</h3><p className="mt-3 text-sm text-slate-300">{service.description}</p><div className="mt-5 flex justify-between border-t border-white/10 pt-4"><b className="text-violet-200">{service.price}</b><button type="button" className="rounded-full border border-violet-500/40 px-3 py-2 text-sm">Consultar</button></div></article>)}</div> : <p className="text-center text-slate-400">No hay servicios disponibles.</p>}</div></section>; }
 
-    void loadInitialData();
-  }, []);
+export function BenefitsSection() { const items = [['100% seguro', 'Procesos confiables.', ShieldCheck], ['Atención rápida', 'Respuesta ágil.', Zap], ['Precios competitivos', 'Costos claros.', BadgeDollarSign], ['Soporte personalizado', 'Acompañamiento cercano.', Users]] as const; return <section className="px-4 py-16 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><h2 className="mb-8 text-center text-3xl font-bold">Lo que te ayuda a decidir</h2><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{items.map(([title, text, Icon]) => <div key={title} className="rounded-3xl border border-white/10 bg-slate-900/70 p-5"><Icon className="h-7 w-7 text-violet-300" /><h3 className="mt-4 text-xl font-semibold">{title}</h3><p className="mt-2 text-sm text-slate-300">{text}</p></div>)}</div></div></section>; }
 
-  useEffect(() => {
-    const onPopState = () => setRoute(window.location.pathname);
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+export function PricingSection() { return <section id="precios" className="px-4 py-16 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><h2 className="mb-8 text-center text-3xl font-bold">Planes accesibles y claros</h2><div className="grid gap-5 lg:grid-cols-3">{[['Básico','$49.000'],['Profesional','$119.000'],['Premium','$249.000']].map(([name, price], i) => <article key={name} className={`rounded-3xl border p-6 ${i === 1 ? 'border-violet-400/60 bg-violet-500/10' : 'border-white/10 bg-slate-900/70'}`}><h3 className="text-2xl font-bold">{name}</h3><p className="mt-3 text-sm text-slate-300">{i === 0 ? 'Para consultas sencillas.' : i === 1 ? 'Para más servicios.' : 'Atención completa.'}</p><p className="mt-6 text-4xl font-black">{price}</p><button type="button" className="mt-6 w-full rounded-full bg-violet-500 px-4 py-3 font-semibold">{i === 2 ? 'Contactar' : 'Elegir plan'}</button></article>)}</div></div></section>; }
 
-  useEffect(() => {
-    saveStoredSession(user);
-  }, [user]);
+export function ProcessSection() { return <section className="px-4 py-16 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><h2 className="mb-8 text-center text-3xl font-bold">Así funciona</h2><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{['Elige un servicio.','Crea tu cuenta o inicia sesión.','Realiza el pedido o pago.','Recibe atención y seguimiento.'].map((step, i) => <div key={step} className="rounded-3xl border border-white/10 bg-slate-900/70 p-5"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/20 text-violet-200">{i + 1}</span><p className="mt-4">{step}</p></div>)}</div></div></section>; }
 
-  const navigate = (path: string) => {
-    window.history.pushState({}, '', path);
-    setRoute(path);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+export function FaqSection() { const faqs = ['¿Qué servicios ofrecen?', '¿Necesito crear una cuenta?', '¿Cómo puedo realizar un pedido?', '¿Cómo recargo mi saldo?', '¿Cuánto tarda la atención?', '¿Cómo contacto al soporte?']; return <section id="faq" className="px-4 py-16 sm:px-6 lg:px-8"><div className="mx-auto max-w-4xl"><h2 className="mb-8 text-center text-3xl font-bold">Preguntas frecuentes</h2>{faqs.map((question) => <details key={question} className="group mb-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4"><summary className="flex cursor-pointer justify-between font-medium">{question}<ChevronDown className="h-5 w-5 group-open:rotate-180" /></summary><p className="mt-3 text-sm text-slate-300">Escríbenos por WhatsApp y te ayudaremos con toda la información.</p></details>)}</div></section>; }
 
-  const login = async (email: string, password: string) => {
-    try {
-      if (hasSupabaseConfig) {
-        const signedIn = await signInWithEmail(email, password);
-        if (!signedIn) {
-          setError('No se pudo iniciar sesión con Supabase.');
-          return;
-        }
-        setUser(signedIn);
-        setShowLogin(false);
-        setError(null);
-        navigate(signedIn.role === 'admin' ? '/admin' : '/perfil');
-        return;
-      }
+export function ContactSection() { const [values, setValues] = useState<ContactFormValues>({ name: '', email: '', message: '' }); const [message, setMessage] = useState(''); const submit = (event: FormEvent) => { event.preventDefault(); const errors = validateContact(values); if (Object.keys(errors).length) { setMessage(Object.values(errors).filter(Boolean).join(' ')); return; } setMessage('Mensaje enviado correctamente.'); setValues({ name: '', email: '', message: '' }); }; return <section id="contacto" className="px-4 py-16 sm:px-6 lg:px-8"><div className="mx-auto grid max-w-6xl gap-8 rounded-[2rem] border border-violet-500/30 bg-violet-950/30 p-6 lg:grid-cols-2"><div><h2 className="text-3xl font-bold">¿Necesitas ayuda?</h2><p className="mt-4 text-slate-300">Atención personalizada para resolver tus dudas.</p><a href={whatsapp} target="_blank" rel="noreferrer" className="mt-6 inline-flex rounded-full bg-emerald-600 px-5 py-3 font-semibold">Contactar por WhatsApp</a></div><form onSubmit={submit} className="space-y-3"><input aria-label="Nombre" value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} placeholder="Nombre" className="w-full rounded-2xl border border-white/10 bg-white/5 p-3" /><input aria-label="Correo" type="email" value={values.email} onChange={(e) => setValues({ ...values, email: e.target.value })} placeholder="Correo" className="w-full rounded-2xl border border-white/10 bg-white/5 p-3" /><textarea aria-label="Mensaje" value={values.message} onChange={(e) => setValues({ ...values, message: e.target.value })} placeholder="Mensaje" className="min-h-28 w-full rounded-2xl border border-white/10 bg-white/5 p-3" /><button type="submit" className="w-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 p-3 font-semibold">Enviar</button>{message ? <p className="text-sm text-violet-200">{message}</p> : null}</form></div></section>; }
 
-      const match = [...defaultUsers, ...readStoredUsers()].find(
-        (item) => item.email.trim().toLowerCase() === email.trim().toLowerCase() && item.password === password,
-      );
+export function Footer() { return <footer className="border-t border-white/10 px-4 py-10 text-center text-sm text-slate-400">© {new Date().getFullYear()} Servidor Uverley · <a href={whatsapp}>WhatsApp</a> · <a href="#faq">Preguntas frecuentes</a></footer>; }
 
-      if (!match) {
-        setError('Correo o contraseña incorrectos.');
-        return;
-      }
+export function LoginPanel({ onSubmit, onRegister, onGoogle, onCancel, error }: { onSubmit: (email: string, password: string) => void; onRegister: (name: string, email: string, password: string) => void; onGoogle: () => void; onCancel: () => void; error: string | null }) { const [mode, setMode] = useState<'login' | 'register'>('login'); const [name, setName] = useState(''); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/80 p-4 backdrop-blur-sm"><div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6"><div className="flex justify-between"><h2 className="text-2xl font-bold">{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</h2><button type="button" onClick={onCancel}><X /></button></div><div className="mt-5 flex gap-2"><button type="button" onClick={() => setMode('login')} className="flex-1 rounded-full bg-violet-500 p-2">Entrar</button><button type="button" onClick={() => setMode('register')} className="flex-1 rounded-full border border-white/10 p-2">Registrarse</button></div><div className="mt-5 space-y-3">{mode === 'register' ? <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="w-full rounded-2xl border border-white/10 bg-white/5 p-3" /> : null}<input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo" className="w-full rounded-2xl border border-white/10 bg-white/5 p-3" /><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" className="w-full rounded-2xl border border-white/10 bg-white/5 p-3" />{error ? <p className="text-sm text-rose-300">{error}</p> : null}<button type="button" onClick={() => mode === 'login' ? onSubmit(email, password) : onRegister(name, email, password)} className="w-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 p-3 font-semibold">{mode === 'login' ? 'Entrar' : 'Crear cuenta'}</button><button type="button" onClick={onGoogle} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white px-4 py-3 font-semibold text-slate-900"><span className="text-lg font-bold">G</span> Continuar con Google</button><p className="text-xs text-slate-400">Google requiere activar el proveedor en Supabase y configurar la URL de redirección.</p></div></div></div>; }
 
-      setError(null);
-      setUser(match);
-      setShowLogin(false);
-      navigate(match.role === 'admin' ? '/admin' : '/perfil');
-    } catch (loginError) {
-      console.error(loginError);
-      setError('Error al iniciar sesión. Verifica tus credenciales.');
-    }
-  };
-
-  const register = async (name: string, email: string, password: string) => {
-    try {
-      if (hasSupabaseConfig) {
-        const created = await signUpWithEmail(name, email, password);
-        if (!created) {
-          setError('No se pudo crear la cuenta.');
-          return;
-        }
-        setUser(created);
-        setShowLogin(false);
-        setError(null);
-        navigate('/perfil');
-        return;
-      }
-
-      const users = readStoredUsers();
-      const exists = users.some((item) => item.email.trim().toLowerCase() === email.trim().toLowerCase());
-      if (exists) {
-        setError('Ya existe una cuenta con ese correo.');
-        return;
-      }
-
-      const newUser: User = {
-        id: `local-${Date.now()}`,
-        name,
-        email,
-        password,
-        role: 'cliente',
-        balance: 0,
-        orders: [],
-        rechargeHistory: [],
-      };
-
-      const allUsers = [...users, newUser];
-      saveStoredUsers(allUsers);
-      setUser(newUser);
-      setShowLogin(false);
-      setError(null);
-      navigate('/perfil');
-    } catch (registerError) {
-      console.error(registerError);
-      setError('Error al crear la cuenta.');
-    }
-  };
-
-  const logout = async () => {
-    try {
-      if (hasSupabaseConfig) {
-        await signOutFromSupabase();
-      }
-    } catch (logoutError) {
-      console.error(logoutError);
-    } finally {
-      setUser(null);
-      navigate('/');
-    }
-  };
-
-  const isHome = route === '/';
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <Header user={user} onLogin={() => setShowLogin(true)} onLogout={logout} onNavigate={navigate} />
-
-      {isHome ? (
-        <>
-          <Hero />
-          <ServicesSection services={services} loading={loading} error={error} />
-          <BenefitsSection />
-          <PricingSection />
-          <ProcessSection />
-          <FaqSection />
-          <ContactSection />
-        </>
-      ) : null}
-
-      {route === '/perfil' ? (user ? <ProfilePage user={user} onLogout={logout} /> : <RouteNotFound message="Inicia sesión para acceder a tu perfil." />) : null}
-      {route === '/admin' ? (user?.role === 'admin' ? <AdminPage user={user} /> : <RouteNotFound message="No tienes permisos para acceder a esta sección." />) : null}
-      {!isHome && route !== '/perfil' && route !== '/admin' ? <RouteNotFound /> : null}
-
-      <Footer />
-      {showLogin ? (
-        <LoginPanel error={error} onSubmit={login} onRegister={register} onCancel={() => { setShowLogin(false); setError(null); }} />
-      ) : null}
-    </div>
-  );
-}
-
-export default App;
+export function ProfilePage({ user, onLogout }: { user: User; onLogout: () => void }) { return <main className="mx-auto max-w-5xl px-4 py-16"><h1 className="text-3xl font-bold">Hola, {user.name}</h1><div className="mt-6 rounded-3xl border border-white/10 bg-slate-900/70 p-6"><p>Correo: {user.email}</p><p className="mt-2">Saldo: ${user.balance.toLocaleString('es-CO')}</p><button type="button" onClick={onLogout} className="mt-5 rounded-full border border-white/10 px-4 py-2">Cerrar sesión</button></div></main>; }
+export function AdminPage({ user }: { user: User }) { return <main className="mx-auto max-w-7xl px-4 py-16"><p className="text-violet-200">Panel administrativo</p><h1 className="mt-2 text-3xl font-bold">Bienvenido, {user.name}</h1><div className="mt-8 grid gap-5 md:grid-cols-4">{['Clientes','Saldos','Pedidos','Recargas pendientes'].map((label) => <div key={label} className="rounded-3xl border border-white/10 bg-slate-900/70 p-5"><p className="text-slate-400">{label}</p><p className="mt-3 text-3xl font-bold">—</p></div>)}</div></main>; }
+export function RouteNotFound({ message = 'La ruta que buscas no existe.' }: { message?: string }) { return <main className="mx-auto max-w-3xl px-4 py-24 text-center"><h1 className="text-4xl font-bold">Página no encontrada</h1><p className="mt-3 text-slate-300">{message}</p><button type="button" onClick={() => window.history.pushState({}, '', '/')} className="mt-6 rounded-full bg-violet-500 px-5 py-3">Volver al inicio</button></main>; }
